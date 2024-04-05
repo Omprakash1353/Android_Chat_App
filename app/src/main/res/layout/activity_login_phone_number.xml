@@ -62,7 +62,7 @@
             android:background="@android:color/transparent"
             android:hint="@string/enter_your_phone_number"
             android:inputType="number"
-            android:maxLength="10"
+            android:maxLength="11"
             android:paddingStart="8dp"
             android:paddingEnd="8dp"
             app:ccp_textSize="24dp" />

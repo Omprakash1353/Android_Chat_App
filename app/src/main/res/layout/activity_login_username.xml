@@ -12,11 +12,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp"
-        android:text="User Detail"
         android:paddingTop="40pt"
+        android:text="User Detail"
         android:textColor="@android:color/black"
-        android:textStyle="bold"
-        android:textSize="24sp" />
+        android:textSize="24sp"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -27,15 +27,26 @@
         android:text="Enter your username inorder to continue"
         android:textColor="@android:color/black" />
 
+    <ImageView
+        android:id="@+id/user_pic"
+        android:layout_width="160dp"
+        android:layout_height="160dp"
+        android:layout_centerInParent="true"
+        android:layout_gravity="center"
+        android:layout_marginBottom="10dp"
+        android:background="@drawable/person_icon"
+        android:backgroundTint="@color/chatblue"
+        android:scaleType="centerCrop" />
+
     <LinearLayout
-        android:paddingTop="30dp"
-        android:paddingBottom="20dp"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:background="@drawable/border_backgound"
-        android:orientation="horizontal"
         android:gravity="center"
-        android:padding="4dp">
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:paddingTop="30dp"
+        android:paddingBottom="20dp">
 
         <EditText
             android:id="@+id/username"
@@ -56,13 +67,13 @@
         android:layout_marginTop="26dp"
         android:layout_marginBottom="16dp"
         android:background="@drawable/btn_rounded_corner"
-        android:text="Next"/>
+        android:text="Next" />
 
     <ProgressBar
+        android:id="@+id/nextProgress"
         android:layout_width="25dp"
         android:layout_height="25dp"
         android:layout_gravity="center"
-        android:layout_marginTop="20dp"
-        android:id="@+id/nextProgress" />
+        android:layout_marginTop="20dp" />
 
 </LinearLayout>
