@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="chatblue">#014df4</color>
+    <color name="chatgray">#E5E5E5</color>
+    <color name="chatred">#ba181b</color>
+    <color name="androidgreen">#56e78f</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="textGray">#999999</color>
+</resources>
