@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.app.Application;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.widget.EditText;
@@ -25,11 +27,16 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.Timestamp;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.Query;
+import com.zegocloud.uikit.prebuilt.call.ZegoUIKitPrebuiltCallService;
+import com.zegocloud.uikit.prebuilt.call.invite.ZegoUIKitPrebuiltCallInvitationConfig;
+import com.zegocloud.uikit.prebuilt.call.invite.widget.ZegoSendCallInvitationButton;
+import com.zegocloud.uikit.service.defines.ZegoUIKitUser;
 
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Collections;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -42,6 +49,7 @@ import okhttp3.Response;
 public class ChatActivity extends AppCompatActivity {
 
     UserModel otherUser;
+    UserModel currentUserModel;
     EditText messageInput;
     ImageButton sendMessageBtn, backBtn;
     TextView otherUsername;
@@ -50,6 +58,7 @@ public class ChatActivity extends AppCompatActivity {
     ChatroomModel chatroomModel;
     ChatRecyclerAdapter adapter;
     ImageView imageView;
+    ZegoSendCallInvitationButton voiceBtn, videoBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +74,11 @@ public class ChatActivity extends AppCompatActivity {
         otherUsername = findViewById(R.id.other_username);
         recyclerView = findViewById(R.id.chat_recycler_view);
         imageView = findViewById(R.id.profile_pic_img_view);
+        voiceBtn = findViewById(R.id.voice_btn);
+        videoBtn = findViewById(R.id.video_btn);
 
         FirebaseUtil.getOtherProfilePicStorageRef(otherUser.getUserId()).getDownloadUrl().addOnCompleteListener(t -> {
-            if(t.isSuccessful()) {
+            if (t.isSuccessful()) {
                 Uri uri = t.getResult();
                 AndroidUtils.setProfilePic(this, uri, imageView);
             }
@@ -82,7 +93,7 @@ public class ChatActivity extends AppCompatActivity {
 
         sendMessageBtn.setOnClickListener(v -> {
             String message = messageInput.getText().toString().trim();
-            if(message.isEmpty()) {
+            if (message.isEmpty()) {
                 return;
             }
             sendMessageToUser(message);
@@ -90,6 +101,54 @@ public class ChatActivity extends AppCompatActivity {
 
         getOrCreateChatroomModel();
         setUpChatRecyclerView();
+
+
+        FirebaseUtil.currentUserDetails().get().addOnCompleteListener(task -> {
+            currentUserModel = task.getResult().toObject(UserModel.class);
+            if (currentUserModel.getUserId() != null)
+                startService(currentUserModel.getUserId().toString(), currentUserModel.getUsername().toString());
+
+        });
+
+    }
+
+    protected void Destroy() {
+        super.onDestroy();
+        ZegoUIKitPrebuiltCallService.unInit();
+    }
+
+    void startService(String userid, String username) {
+        Application application = getApplication();
+        long appID = 596778587;
+        String appSign = "5ad6b7d128d9162bf45b3393c1a136bb79fd13969461ccfa690166498a3e786a";
+
+        String userID = userid;
+        String userName = username;
+
+        ZegoUIKitPrebuiltCallInvitationConfig callInvitationConfig = new ZegoUIKitPrebuiltCallInvitationConfig();
+
+        ZegoUIKitPrebuiltCallService.init(getApplication(), appID, appSign, userID, userName, callInvitationConfig);
+
+        setVideoCall(otherUser.getUserId(), otherUser.getUsername());
+        setVoiceCall(otherUser.getUserId(), otherUser.getUsername());
+    }
+
+    void setVoiceCall(String targetUserid, String targetUsername) {
+        String targetUserID = targetUserid;
+        String targetUserName = targetUsername;
+
+        voiceBtn.setIsVideoCall(false);
+        voiceBtn.setResourceID("zego_uikit_call");
+        voiceBtn.setInvitees(Collections.singletonList(new ZegoUIKitUser(targetUserID, targetUserName)));
+    }
+
+    void setVideoCall(String targetUserid, String targetUsername) {
+        String targetUserID = targetUserid;
+        String targetUserName = targetUsername;
+
+        videoBtn.setIsVideoCall(true);
+        videoBtn.setResourceID("zego_uikit_call");
+        videoBtn.setInvitees(Collections.singletonList(new ZegoUIKitUser(targetUserID, targetUserName)));
     }
 
     void setUpChatRecyclerView() {
@@ -120,7 +179,7 @@ public class ChatActivity extends AppCompatActivity {
         FirebaseUtil.getChatroomMessageReference(chatroomId).add(chatMessageModel).addOnCompleteListener(new OnCompleteListener<DocumentReference>() {
             @Override
             public void onComplete(@NonNull Task<DocumentReference> task) {
-                if(task.isSuccessful()) {
+                if (task.isSuccessful()) {
                     messageInput.setText("");
                     sendNotification(message);
                 }
@@ -131,9 +190,9 @@ public class ChatActivity extends AppCompatActivity {
 
     void getOrCreateChatroomModel() {
         FirebaseUtil.getChatroomReference(chatroomId).get().addOnCompleteListener(task -> {
-            if(task.isSuccessful()) {
+            if (task.isSuccessful()) {
                 chatroomModel = task.getResult().toObject(ChatroomModel.class);
-                if(chatroomModel == null) {
+                if (chatroomModel == null) {
                     chatroomModel = new ChatroomModel(chatroomId, Arrays.asList(FirebaseUtil.currentUserId(), otherUser.getUserId()), Timestamp.now(), "");
                     FirebaseUtil.getChatroomReference(chatroomId).set(chatroomModel);
                 }
@@ -143,9 +202,9 @@ public class ChatActivity extends AppCompatActivity {
 
     void sendNotification(String message) {
         FirebaseUtil.currentUserDetails().get().addOnCompleteListener(task -> {
-            if(task.isSuccessful()) {
+            if (task.isSuccessful()) {
                 UserModel currentUser = task.getResult().toObject(UserModel.class);
-                try{
+                try {
                     JSONObject jsonObject = new JSONObject();
 
                     JSONObject notificationObject = new JSONObject();
@@ -160,7 +219,7 @@ public class ChatActivity extends AppCompatActivity {
                     jsonObject.put("to", otherUser.getFcmToken());
 
                     callApi(jsonObject);
-                } catch(Exception e) {
+                } catch (Exception e) {
 
                 }
             }
